@@ -1,4 +1,4 @@
-.fieldset {
+.question {
     overflow: hidden;
     padding: 5px;
     line-height: 20px;
@@ -6,6 +6,20 @@
     border: 1px solid #999;
 }
 
-.fieldset:hover {
+.question:hover {
     background: #9fc4e8;
+}
+
+.error.question {
+    border-color: #a94442;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+}
+
+.error.question:hover {
+    background: #F8B4B4;
+}
+
+.error-text {
+    color: #a94442;
 }

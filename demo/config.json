@@ -5,6 +5,7 @@
             "text": "Are you <% this.username?this.username:'' %>?",
             "id": "q-0",
             "type": "radio-text",
+            "required": true,
             "options": [{
                     "id": "o-1-y",
                     "data": "y",
@@ -22,6 +23,7 @@
             "text": "Are you ok?",
             "id": "q-1",
             "type": "radio",
+            "required": true,
             "options": [{
                     "id": "o-1-y",
                     "data": "y",
@@ -39,6 +41,7 @@
             "text": "Do you like me?",
             "id": "q-2",
             "type": "radio",
+            "required": true,
             "options": [{
                     "id": "o-1-y",
                     "data": "y",
@@ -56,6 +59,7 @@
             "text": "Do you like MI?",
             "id": "q-3",
             "type": "radio",
+            "required": true,
             "options": [{
                     "id": "o-1-y",
                     "data": "y",
@@ -72,12 +76,14 @@
         {
             "text": "How do you like me?",
             "id": "q-4",
-            "type": "text"
+            "type": "text",
+            "required": true
         },
         {
             "text": "How are you?",
             "id": "q-5",
-            "type": "text"
+            "type": "text",
+            "required": true
         },
         {
             "text": "Thank you!",

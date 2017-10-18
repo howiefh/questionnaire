@@ -10,6 +10,9 @@
 (function ($) {
     'use strict';
     var DIRECT = '$$DIRECT$$';
+    var OK = {error: false, msg: 'ok'},
+    NOT_COMPLETED_ERR = {error: true, msg: '未完成'},
+    REQUIRED_ERR = {error: true, msg: '有必答项未答'};
 
     if (!String.prototype.startsWith) {
         String.prototype.startsWith = function (searchString, position) {
@@ -61,7 +64,10 @@
         this.element = element;
         this.question = question;
         this.type = question.type;
+        this.required = question.required;
+        this.end = !!question.end;
         this.visible = false;
+        this.error = false;
         this.multipleRoutes = false;
         this.singleChoiceType = this.type.startsWith('radio');
         this.selectedOption = null;
@@ -153,31 +159,54 @@
             var answer, options = [],
                 textEle, text;
 
+            answer = {
+                id: this.id,
+                type: this.type
+            };
+
             if (this.type.startsWith('radio')) {
                 if (this.selectedOption) {
                     options.push(this.selectedOption);
+                }
+
+                if (options.length) {
+                    answer.options = options;
+                    this.hideError();
+                } else {
+                    this.showError();
                 }
             }
 
             if (this.type.endsWith('text')) {
                 textEle = this.element.find('input[type=text]');
                 text = textEle.length ? textEle.val() : null;
+
+                if (text) {
+                    answer.text = text;
+                }
+
+                if (this.type === 'text') {
+                    if (text) {
+                        this.hideError();
+                    } else {
+                        this.showError();
+                    }
+                }
             }
 
-            answer = {
-                id: this.id,
-                type: this.type
-            };
-
-            if (options.length) {
-                answer.options = options;
-            }
-
-            if (text) {
-                answer.text = text;
-            }
+            answer.error = this.error;
 
             return answer;
+        },
+
+        showError: function() {
+            this.error = true;
+            this.element.addClass('error').prepend('<div class="error-text">这是必填项</div>');
+        },
+
+        hideError: function() {
+            this.error = false;
+            this.element.removeClass('error').find('.error-text').remove();
         }
     };
 
@@ -369,17 +398,36 @@
 
         collectAnswers: function () {
             var question = this.questions[0],
+                prevQuestion = question,
                 answers = [],
-                answer;
+                answer,
+                result = OK;
 
             while (question) {
                 answer = question.getAnswer();
                 if (answer) {
+                    if (answer.error) {
+                        result = REQUIRED_ERR;
+                    }
                     answers.push(answer);
+                } else {
+                    result = REQUIRED_ERR;
+                    break;
                 }
+                prevQuestion = question;
                 question = question.nextQuestion;
             }
-            return answers;
+
+            if (!prevQuestion.end) {
+                result = NOT_COMPLETED_ERR;
+            }
+
+            return {
+                id: this.id,
+                error: result.error,
+                msg: result.msg,
+                answers: answers
+            };
         }
     };
 
@@ -412,8 +460,8 @@
         resetHiddenFields: true, // true | false
         tpl: '<% for(var i = 0; i < this.length; i++) { ' +
             'var question = this[i]; %>' +
-            '<fieldset class="fieldset" id="<% question.id %>" data-qid="<% question.id %>" data-index="<% i %>" style="display:none">' +
-            '  <h5 class="question"><% question.text %></h5>' +
+            '<fieldset class="question" id="<% question.id %>" data-qid="<% question.id %>" data-index="<% i %>" style="display:none">' +
+            '  <h5 class="question-text"><% question.text %></h5>' +
             '  <% if(question.type.indexOf("radio") === 0) { %>' +
             '  <div class="options">' +
             '    <% for(var j = 0; j < question.options.length; j++) { ' +
