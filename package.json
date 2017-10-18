@@ -1,0 +1,23 @@
+{
+  "name": "questionnaire",
+  "version": "1.0.0",
+  "description": "questionnaire",
+  "main": "questionnaire.js",
+  "scripts": {
+    "start": "http-server -a 127.0.0.1 -p 7070",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/howiefh/questionnaire.git"
+  },
+  "keywords": [
+    "questionnaire"
+  ],
+  "author": "Feng Hao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/howiefh/questionnaire/issues"
+  },
+  "homepage": "https://github.com/howiefh/questionnaire#readme"
+}

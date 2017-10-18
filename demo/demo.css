@@ -1,0 +1,11 @@
+.fieldset {
+    overflow: hidden;
+    padding: 5px;
+    line-height: 20px;
+    margin: 5px;
+    border: 1px solid #999;
+}
+
+.fieldset:hover {
+    background: #9fc4e8;
+}
