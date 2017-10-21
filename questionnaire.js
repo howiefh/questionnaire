@@ -10,9 +10,18 @@
 (function ($) {
     'use strict';
     var DIRECT = '$$DIRECT$$';
-    var OK = {error: false, msg: 'ok'},
-    NOT_COMPLETED_ERR = {error: true, msg: '未完成'},
-    REQUIRED_ERR = {error: true, msg: '有必答项未答'};
+    var OK = {
+            error: false,
+            msg: 'ok'
+        },
+        NOT_COMPLETED_ERR = {
+            error: true,
+            msg: '未完成'
+        },
+        REQUIRED_ERR = {
+            error: true,
+            msg: '有必答项未答'
+        };
 
     if (!String.prototype.startsWith) {
         String.prototype.startsWith = function (searchString, position) {
@@ -39,7 +48,6 @@
             cursor = 0;
 
         var add = function (line, js) {
-            line = line.trim();
             js ? (code += line.match(regOut) ? line + '\n' : 'r.push(' + line + ');\n') :
                 (code += line != '' ? 'r.push("' + line.replace(/"/g, '\\"') + '");\n' : '');
             return add;
@@ -65,8 +73,10 @@
         this.question = question;
         this.type = question.type;
         this.required = question.required;
+        this.start = this.index === 0;
         this.end = !!question.end;
-        this.visible = false;
+        this.fixed = !!question.fixed;
+        this.visible = this.fixed || this.start;
         this.error = false;
         this.multipleRoutes = false;
         this.singleChoiceType = this.type.startsWith('radio');
@@ -75,6 +85,8 @@
 
         this.firstIn = null;
         this.firstOut = null;
+
+        this.element[this.visible ? 'show' : 'hide']();
 
         if (this.type.startsWith('radio')) {
             this.element.find('input[type=radio]').on('change', function (that) {
@@ -117,47 +129,54 @@
 
         resetHiddenFields: function () {
             if (!this.visible) {
-                this.selectedOption = null;
-                if (this.multipleRoutes) { // 又多个不同选项时才需要重置，其他情况 nextQuestion 是固定的.
-                    this.nextQuestion = null;
-                }
-                this.element.find('input, select, textarea').each(function () {
-                    switch (this.type.toLowerCase()) {
-                        case 'text':
-                        case 'password':
-                        case 'textarea':
-                        case 'hidden':
-                            this.value = '';
-                            break;
-
-                        case 'radio':
-                        case 'checkbox':
-                            this.checked = false;
-                            break;
-
-                        case 'select-one':
-                        case 'select-multi':
-                            this.selectedIndex = -1;
-                            break;
-
-                        default:
-                            throw new Error('Unsupported input type.');
-                            break;
-                    }
-                });
+                this.resetFields();
             }
+        },
+
+        resetFields: function () {
+            this.selectedOption = null;
+            if (this.multipleRoutes) { // 又多个不同选项时才需要重置，其他情况 nextQuestion 是固定的.
+                this.nextQuestion = null;
+            }
+            this.element.find('input, select, textarea').each(function () {
+                switch (this.type.toLowerCase()) {
+                    case 'text':
+                    case 'password':
+                    case 'textarea':
+                    case 'hidden':
+                        this.value = '';
+                        break;
+
+                    case 'radio':
+                    case 'checkbox':
+                        this.checked = false;
+                        break;
+
+                    case 'select-one':
+                    case 'select-multi':
+                        this.selectedIndex = -1;
+                        break;
+
+                    default:
+                        throw new Error('Unsupported input type.');
+                        break;
+                }
+            });
         },
 
         changeState: function (newState) {
             if (this.visible !== newState) {
                 this.visible = newState;
-                this.element[this.visible ? 'show' : 'hide']();
+                this.element[this.visible || this.start || this.fixed ? 'show' : 'hide']();
             }
         },
 
         getAnswer: function () {
             var answer, options = [],
                 textEle, text;
+            if (this.type === 'msg') {
+                return null;
+            }
 
             answer = {
                 id: this.id,
@@ -199,12 +218,24 @@
             return answer;
         },
 
-        showError: function() {
+        setAnswer: function (answer) {
+            if (this.type.startsWith('radio')) {
+                this.selectedOption = answer.options[0];
+                this.element.find('input[data-oid=' + this.selectedOption.id + ']').prop('checked', true);
+            }
+
+            if (this.type.endsWith('text')) {
+                this.element.find('input[type=text]').val(answer.text);
+            }
+
+        },
+
+        showError: function () {
             this.error = true;
             this.element.addClass('error').prepend('<div class="error-text">这是必填项</div>');
         },
 
-        hideError: function() {
+        hideError: function () {
             this.error = false;
             this.element.removeClass('error').find('.error-text').remove();
         }
@@ -334,6 +365,8 @@
                     }
                 }
 
+                // todo 验证 fixed 的问题入边必须唯一
+
                 if (moreThanOneChoice) {
                     question.multipleRoutes = true;
                 } else {
@@ -342,6 +375,10 @@
             }
 
             this.update();
+
+            if (this.options.aid === this.id && $.isArray(this.options.answers)) {
+                this.fill(this.options.answers);
+            }
         },
 
         update: function (start) {
@@ -396,6 +433,46 @@
             }
         },
 
+        fill: function (answers) {
+            var questions = this.questions,
+                question,
+                answer,
+                selectedRoute,
+                i, len = questions.length;
+
+            if (len < 0) {
+                return;
+            }
+
+            for (i = 0; i < len; i++) {
+                question = questions[i];
+                question.resetFields();
+            }
+
+            question = questions[0];
+
+            // 设置问题答案
+            for (i = 0, len = answers.length; i < len && question; i++) {
+                answer = answers[i];
+
+                question.changeState(true);
+                question.setAnswer(answer);
+
+                if (!question.nextQuestion) {
+                    selectedRoute = question.findRoute();
+                    question.nextQuestion = selectedRoute ? questions[selectedRoute.headVex] : null;
+                }
+
+                question = question.nextQuestion;
+            }
+
+            // 显示剩余问题
+            while (question) {
+                question.changeState(true);
+                question = question.nextQuestion;
+            }
+        },
+
         collectAnswers: function () {
             var question = this.questions[0],
                 prevQuestion = question,
@@ -410,9 +487,6 @@
                         result = REQUIRED_ERR;
                     }
                     answers.push(answer);
-                } else {
-                    result = REQUIRED_ERR;
-                    break;
                 }
                 prevQuestion = question;
                 question = question.nextQuestion;
@@ -475,7 +549,7 @@
             '  <% if(question.type.lastIndexOf("text") !== -1 && question.type.lastIndexOf("text") === question.type.length - 4) { %>' +
             '  <div class="form-group">' +
             '    <div class="col-sm-10">' +
-            '      <input type="text" class="form-control" name="<% question.id %>">' +
+            '      <input type="text" class="form-control" name="<% question.id %>" value="<% question.default %>">' +
             '    </div>' +
             '  </div>' +
             '  <% } %>' +
