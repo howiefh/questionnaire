@@ -73,6 +73,7 @@
         this.question = question;
         this.type = question.type;
         this.required = question.required;
+        this.default = question.default;
         this.start = this.index === 0;
         this.end = !!question.end;
         this.fixed = !!question.fixed;
@@ -93,7 +94,7 @@
                 return function () {
                     var checked = that.element.find('input[type=radio]:checked'),
                         opt = checked.length ? {
-                            id: checked.data('oid'),
+                            id: checked.data('oid') + '',
                             data: checked.data('data'),
                             text: checked.val()
                         } : null;
@@ -188,11 +189,13 @@
                     options.push(this.selectedOption);
                 }
 
-                if (options.length) {
-                    answer.options = options;
-                    this.hideError();
-                } else {
-                    this.showError();
+                if (this.required) {
+                    if (options.length) {
+                        answer.options = options;
+                        this.hideError();
+                    } else {
+                        this.showError();
+                    }
                 }
             }
 
@@ -200,11 +203,13 @@
                 textEle = this.element.find('input[type=text]');
                 text = textEle.length ? textEle.val() : null;
 
-                if (text) {
+                if (text && text !== this.default) {
                     answer.text = text;
+                } else {
+                    answer.text = '';
                 }
 
-                if (this.type === 'text') {
+                if (this.type === 'text' && this.required) {
                     if (text) {
                         this.hideError();
                     } else {
@@ -287,10 +292,12 @@
                 questionConfig.text = tplEngine(questionConfig.text, model);
 
                 if (!questionConfig.end) {
-                    if (!questionConfig.goto && i + 1 < len) { // 没有显示指定跳转问题时指定数组的下一个问题.
-                        questionConfig.goto = questionConfigs[i + 1].id;
-                    } else {
-                        throw new Error('Config error. Can not parse question ' + questionConfig.id + '\'s goto attribute.');
+                    if (!questionConfig.goto) {
+                        if (i + 1 < len) { // 没有显示指定跳转问题时指定数组的下一个问题.
+                            questionConfig.goto = questionConfigs[i + 1].id;
+                        } else {
+                            throw new Error('Config error. Can not parse question ' + questionConfig.id + '\'s goto attribute.');
+                        }
                     }
 
                     if (questionConfig.type.startsWith('radio')) {
@@ -341,6 +348,10 @@
                     throw new Error('Config error. Can not find question ' + arc.head + ' or ' + arc.tail + '.');
                 }
 
+                if (h <= t) { // 下一个问题只能在当前问题后面（在配置数组中的位置），防止有环
+                    throw new Error('Config error. Goto question must after current question. ' + arc.tail + ' -> ' + arc.head + '.');
+                }
+                
                 // tailQ --> headQ. tailQ 是起始点, headQ 是终止点
                 headQ = questions[h],
                     tailQ = questions[t];
