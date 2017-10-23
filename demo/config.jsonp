@@ -1,0 +1,152 @@
+initQuestionnaire(
+{
+    "resetHiddenFields": false, 
+    "id": "1.0", 
+    "questions": [
+        {
+            "text": "Are you <% this.username?this.username:'' %>?", 
+            "id": "q-0", 
+            "type": "radio-text", 
+            "required": true, 
+            "options": [
+                {
+                    "id": "o-1-y", 
+                    "data": "y", 
+                    "text": "yes"
+                }, 
+                {
+                    "id": "o-0-n", 
+                    "text": "no", 
+                    "data": "n", 
+                    "goto": "q-2"
+                }
+            ]
+        }, 
+        {
+            "text": "Are you ok?", 
+            "id": "q-1", 
+            "type": "radio", 
+            "required": true, 
+            "options": [
+                {
+                    "id": "o-1-y", 
+                    "data": "y", 
+                    "text": "yes"
+                }, 
+                {
+                    "id": "o-0-n", 
+                    "data": "n", 
+                    "text": "no", 
+                    "goto": "q-3"
+                }
+            ]
+        }, 
+        {
+            "text": "Do you like me?", 
+            "id": "q-2", 
+            "type": "radio", 
+            "required": true, 
+            "options": [
+                {
+                    "id": "o-1-y", 
+                    "data": "y", 
+                    "text": "yes"
+                }, 
+                {
+                    "id": "o-0-n", 
+                    "data": "n", 
+                    "text": "no", 
+                    "goto": "q-4"
+                }
+            ]
+        }, 
+        {
+            "text": "Do you like MI?", 
+            "id": "q-3", 
+            "type": "radio", 
+            "required": true, 
+            "options": [
+                {
+                    "id": "o-1-y", 
+                    "data": "y", 
+                    "text": "yes"
+                }, 
+                {
+                    "id": "o-0-n", 
+                    "data": "n", 
+                    "text": "no", 
+                    "goto": "q-4"
+                }
+            ]
+        }, 
+        {
+            "text": "How do you like me?", 
+            "id": "q-4", 
+            "type": "text", 
+            "default": "don't know", 
+            "fixed": true, 
+            "required": true
+        }, 
+        {
+            "text": "How are you?", 
+            "id": "q-5", 
+            "type": "text", 
+            "required": true
+        }, 
+        {
+            "text": "Thank you!", 
+            "id": "q-6", 
+            "end": true, 
+            "type": "msg"
+        }
+    ], 
+    "model": {
+        "username": "junjun"
+    }, 
+    "aid": "1.0", 
+    "answers": [
+        {
+            "id": "q-0", 
+            "type": "radio-text", 
+            "options": [
+                {
+                    "id": "o-1-y", 
+                    "data": "y", 
+                    "text": "yes"
+                }
+            ]
+        }, 
+        {
+            "id": "q-1", 
+            "type": "radio", 
+            "options": [
+                {
+                    "id": "o-0-n", 
+                    "data": "n", 
+                    "text": "no"
+                }
+            ] 
+        }, 
+        {
+            "id": "q-3", 
+            "type": "radio", 
+            "options": [
+                {
+                    "id": "o-1-y", 
+                    "data": "y", 
+                    "text": "yes"
+                }
+            ]
+        }, 
+        {
+            "id": "q-4", 
+            "type": "text", 
+            "text": "hehe"
+        }, 
+        {
+            "id": "q-5", 
+            "type": "text", 
+            "text": "fine" 
+        }
+    ]
+})
