@@ -3,7 +3,8 @@
     padding: 5px;
     line-height: 20px;
     margin: 5px;
-    border: 1px solid #999;
+    border: 1px solid #ddd;
+	border-radius: 4px;
 }
 
 .question:hover {

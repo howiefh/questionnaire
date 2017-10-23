@@ -258,12 +258,12 @@
 
         showError: function () {
             this.error = true;
-            this.element.addClass('error').prepend('<div class="error-text">这是必填项</div>');
+            this.element.addClass('error').attr('title', '这是必填项');
         },
 
         hideError: function () {
             this.error = false;
-            this.element.removeClass('error').find('.error-text').remove();
+            this.element.removeClass('error').attr('title', '');
         }
     };
 
