@@ -1,7 +1,10 @@
 $(function() {
-    $.getJSON('config.json', function(json) {
-        $('#questionsForm').questionnaire(json);
+    $.ajax({
+        url: 'config.jsonp',
+        dataType: "jsonp",
+        jsonpCallback: "initQuestionnaire"
     });
+
 
     $('#questionsForm').on('q.change', function(){
         var answers = $('#questionsForm').questionnaire('collectAnswerTexts');
@@ -14,3 +17,7 @@ $(function() {
         alert(JSON.stringify(answers));
     })
 })
+
+function initQuestionnaire(json) {
+    $('#questionsForm').questionnaire(json);
+}
