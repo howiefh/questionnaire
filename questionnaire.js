@@ -82,6 +82,7 @@
         this.multipleRoutes = false;
         this.singleChoiceType = this.type.startsWith('radio');
         this.selectedOption = null;
+        this.text = null;
         this.nextQuestion = null;
 
         this.firstIn = null;
@@ -89,9 +90,10 @@
 
         this.element[this.visible ? 'show' : 'hide']();
 
-        if (this.type.startsWith('radio')) {
-            this.element.find('input[type=radio]').on('change', function (that) {
-                return function () {
+        this.element.find('input,select,textarea').on('change', function (that) {// TODO 后续支持 select, textarea
+            return function (event) {
+                var ele = $(event.target);
+                if (ele.is('input[type=radio]')) {
                     var checked = that.element.find('input[type=radio]:checked'),
                         opt = checked.length ? {
                             id: checked.data('oid') + '',
@@ -101,9 +103,13 @@
 
                     that.selectedOption = opt;
                     that.questionnaire.update(that.index);
-                };
-            }(this));
-        }
+                } else if (ele.is('input[type=text]')) {
+                    that.text = ele.val();
+                }
+
+                that.element.trigger('q.change');
+            };
+        }(this));
     };
 
     Question.prototype = {
@@ -172,9 +178,24 @@
             }
         },
 
+        getAnswerText: function () {
+            var answer = this.getAnswer(),
+            text = null;
+            if (!answer || answer.error) {
+                return text;
+            }
+
+            if (answer.type.startsWith('radio') && answer.options && answer.options.length) {
+                text = answer.id + ' ' + answer.options[0].text + (answer.text ? ' ' + answer.text : '');
+            } else if (answer.type === 'text' && answer.text) {
+                text = answer.id + ' ' + answer.text;
+            }
+            return text;
+        },
+
         getAnswer: function () {
             var answer, options = [],
-                textEle, text;
+                text;
             if (this.type === 'msg') {
                 return null;
             }
@@ -186,12 +207,12 @@
 
             if (this.type.startsWith('radio')) {
                 if (this.selectedOption) {
-                    options.push(this.selectedOption);
+                    options.push($.extend(true, {}, this.selectedOption));
+                    answer.options = options;
                 }
 
                 if (this.required) {
                     if (options.length) {
-                        answer.options = options;
                         this.hideError();
                     } else {
                         this.showError();
@@ -200,8 +221,7 @@
             }
 
             if (this.type.endsWith('text')) {
-                textEle = this.element.find('input[type=text]');
-                text = textEle.length ? textEle.val() : null;
+                text = this.text;
 
                 if (text && text !== this.default) {
                     answer.text = text;
@@ -209,7 +229,7 @@
                     answer.text = '';
                 }
 
-                if (this.type === 'text' && this.required) {
+                if (this.type === 'text' && this.required) { // 只有 text 类型校验，radio-text 不校验
                     if (text) {
                         this.hideError();
                     } else {
@@ -230,6 +250,7 @@
             }
 
             if (this.type.endsWith('text')) {
+                this.text = answer.text;
                 this.element.find('input[type=text]').val(answer.text);
             }
 
@@ -376,7 +397,7 @@
                     }
                 }
 
-                // todo 验证 fixed 的问题入边必须唯一
+                // todo 验证 fixed 的问题入边必须唯一，必须是 end 问题节点的前置节点.
 
                 if (moreThanOneChoice) {
                     question.multipleRoutes = true;
@@ -484,6 +505,22 @@
             }
         },
 
+        collectAnswerTexts: function () {
+            var question = this.questions[0],
+                answers = [],
+                answer;
+
+            while (question) {
+                answer = question.getAnswerText();
+                if (answer) {
+                    answers.push(answer);
+                }
+                question = question.nextQuestion;
+            }
+
+            return answers.join('\n');
+        },
+
         collectAnswers: function () {
             var question = this.questions[0],
                 prevQuestion = question,
@@ -559,7 +596,7 @@
             '  <% } %>' +
             '  <% if(question.type.lastIndexOf("text") !== -1 && question.type.lastIndexOf("text") === question.type.length - 4) { %>' +
             '  <div class="form-group">' +
-            '    <div class="col-sm-10">' +
+            '    <div class="col-sm-10" style="padding-left: 0;">' +
             '      <input type="text" class="form-control" name="<% question.id %>" value="<% question.default %>">' +
             '    </div>' +
             '  </div>' +
