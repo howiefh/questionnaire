@@ -103,7 +103,7 @@
 
                     that.selectedOption = opt;
                     that.questionnaire.update(that.index);
-                } else if (ele.is('input[type=text]')) {
+                } else if (ele.is('input[type=text]') || ele.is('textarea')) {
                     that.text = ele.val();
                 }
 
@@ -187,7 +187,7 @@
 
             if (answer.type.startsWith('radio') && answer.options && answer.options.length) {
                 text = answer.id + ' ' + answer.options[0].text + (answer.text ? ' ' + answer.text : '');
-            } else if (answer.type === 'text' && answer.text) {
+            } else if ((answer.type === 'text' || answer.type === 'textarea') && answer.text) {
                 text = answer.id + ' ' + answer.text;
             }
             return text;
@@ -220,7 +220,7 @@
                 }
             }
 
-            if (this.type.endsWith('text')) {
+            if (this.type.endsWith('text') || this.type.endsWith('textarea')) {
                 text = this.text;
 
                 if (text && text !== this.default) {
@@ -229,7 +229,7 @@
                     answer.text = '';
                 }
 
-                if (this.type === 'text' && this.required) { // 只有 text 类型校验，radio-text 不校验
+                if ((this.type === 'text' || this.type === 'textarea') && this.required) { // 只有 text 类型校验，radio-text 不校验
                     if (text) {
                         this.hideError();
                     } else {
@@ -252,6 +252,11 @@
             if (this.type.endsWith('text')) {
                 this.text = answer.text;
                 this.element.find('input[type=text]').val(answer.text);
+            }
+
+            if (this.type.endsWith('textarea')) {
+                this.text = answer.text;
+                this.element.find('textarea').val(answer.text);
             }
 
         },
@@ -408,7 +413,7 @@
 
             this.update();
 
-            if (this.options.aid === this.id && $.isArray(this.options.answers)) {
+            if ($.isArray(this.options.answers)) {
                 this.fill(this.options.answers);
             }
         },
@@ -597,7 +602,14 @@
             '  <% if(question.type.lastIndexOf("text") !== -1 && question.type.lastIndexOf("text") === question.type.length - 4) { %>' +
             '  <div class="form-group">' +
             '    <div class="col-sm-10" style="padding-left: 0;">' +
-            '      <input type="text" class="form-control" name="<% question.id %>" value="<% question.default %>">' +
+            '      <input type="text" class="form-control" value="<% question.default %>">' +
+            '    </div>' +
+            '  </div>' +
+            '  <% } %>' +
+            '  <% if(question.type.lastIndexOf("textarea") !== -1 && question.type.lastIndexOf("textarea") === question.type.length - 8) { %>' +
+            '  <div class="form-group">' +
+            '    <div class="col-sm-10" style="padding-left: 0;">' +
+            '      <textarea class="form-control"><% question.default %></textarea>' +
             '    </div>' +
             '  </div>' +
             '  <% } %>' +

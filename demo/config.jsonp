@@ -90,7 +90,7 @@ initQuestionnaire(
         {
             "text": "How are you?", 
             "id": "q-5", 
-            "type": "text", 
+            "type": "textarea", 
             "required": true
         }, 
         {
