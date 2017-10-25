@@ -84,14 +84,14 @@ initQuestionnaire(
             "id": "q-4", 
             "type": "text", 
             "default": "don't know", 
-            "fixed": true, 
             "required": true
         }, 
         {
             "text": "How are you?", 
             "id": "q-5", 
             "type": "textarea", 
-            "required": true
+            "fixed": true, 
+            "default": "Fine!"
         }, 
         {
             "text": "Thank you!", 
@@ -146,7 +146,7 @@ initQuestionnaire(
         {
             "id": "q-5", 
             "type": "text", 
-            "text": "fine" 
+            "text": "" 
         }
     ]
 })

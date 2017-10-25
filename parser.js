@@ -1,79 +1,128 @@
 const readline = require('readline'),
-fs = require('fs');
+    fs = require('fs');
 
-var questions = [], question, 
-option, oindex;
+var questions = [],
+    question,
+    option, oindex,
+    questionType = {
+        "单选": "radio",
+        "单行文本": "text",
+        "多行文本": "textarea",
+        "单选单行文本": "radio-text",
+        "单选多行文本": "radio-textarea",
+        "提示": "msg"
+    },
+    types = [];
 
-const rl = readline.createInterface({
-    input: fs.createReadStream('D:/qa.md')
-});
-
-function parseQuestionLine(line, type, realType) {
-    var start = line.indexOf(' '),
-    end = line.lastIndexOf(type),
-    qid = line.substring(0, start),
-    qtext = line.substring(start + 1, end),
-    qtype = realType;
-    if (qtype.startsWith('radio')) {
-        return {
-            id: qid,
-            text: qtext,
-            type: qtype,
-            options: []
-        };
-    } else {
-        return {
-            id: qid,
-            text: qtext,
-            type: qtype
-        };
-    }
+for (var key in questionType) {
+    types.push(questionType[key]);
 }
 
-function parseOptionLine(line, oindex) {
-    var otext = line.substring(2);
-    return {
-        id: '' + oindex,
-        text: otext
+const rl = readline.createInterface({
+    input: fs.createReadStream('demo/config.txt')
+});
+
+function parseLine(line) {
+    var reg = /\[([^\]]+)?\]/g, match, 
+    attrs = [], attr, attrPair,
+    prefix, text, index,
+    type,
+    i, len,
+    option;
+
+    while (match = reg.exec(line)) {
+        attrs.push({
+            index: match.index,
+            text: match[1]
+        });
+    }
+
+    if (attrs.length) {
+        index = line.indexOf(' ');
+        prefix = line.substring(0, index);
+        text = line.substring(index + 1, attrs[0].index);
+
+        type = attrs[attrs.length - 1].text;
+
+        if (questionType[type]) {
+            type = questionType[type];
+        } else if (types.indexOf(type) === -1) {
+            type = null;
+        }
+    } else if (line.startsWith('* ')) {
+        index = line.indexOf(' ');
+        prefix = line.substring(0, index);
+        text = line.substring(index + 1);
+    } else {
+        text = line;
+    }
+
+    if (type) {
+        oindex = 0;
+        if (type.startsWith('radio')) {
+            question = {
+                id: prefix,
+                text: text,
+                type: type,
+                options: []
+            };
+        } else {
+            question = {
+                id: prefix,
+                text: text,
+                type: type
+            };
+        }
+
+        for (i = 0, len = attrs.length; i < len; i++) {
+            attr = attrs[i];
+            attrPair = attr.text.split(':');
+            if (attrPair.length === 2) {
+                question[attrPair[0]] = attrPair[1];
+            }
+        }
+    } else if (prefix) {
+        option = {
+            id: '' + (++oindex),
+            text: text
+        }
+
+        for (i = 0, len = attrs.length; i < len; i++) {
+            attr = attrs[i];
+            attrPair = attr.text.split(':');
+            if (attrPair.length === 2) {
+                option[attrPair[0]] = attrPair[1];
+            }
+        }
+
+        question.options.push(option);
+    } else {
+        question.default = text;
     }
 }
 
 rl.on('line', (line) => {
     line = line.trim();
     if (line.length === 0 && question) {
-        if (question) {
-            questions.push(question);
-        }
+        console.info('empty line: ', question);
+        questions.push(question);
         question = null
-    } else if (line.endsWith('[单选单行文本]')) {
-        oindex = 0;
-        question = parseQuestionLine(line, '[单选单行文本]', 'radio-text');
-    } else if (line.endsWith('[单选]')) {
-        oindex = 0;
-        question = parseQuestionLine(line, '[单选]', 'radio');
-    } else if (line.endsWith('[单行文本]')) {
-        oindex = 0;
-        question = parseQuestionLine(line, '[单行文本]', 'text');
-    } else if (line.endsWith('[提示]')) {
-        oindex = 0;
-        question = parseQuestionLine(line, '[提示]', 'msg');
-    } else if (line.startsWith('* ')) {
-        oindex++;
-        option = parseOptionLine(line, oindex);
-        question.options.push(option);
     } else {
-        question.default = line;
+        console.info('parse: ', line);
+        parseLine(line);
     }
 });
 
 rl.on('close', () => {
     var content = JSON.stringify(questions, null, 4);
     console.info(content);
-    fs.writeFile(__dirname + '/config.txt', content, {flag: 'w+'}, function (err) {
-        if(err) {
-         console.error(err);
-         } else {
+    fs.writeFile(__dirname + '/out.txt', content, {
+        flag: 'w+'
+    }, function (err) {
+        if (err) {
+            console.error(err);
+        } else {
             console.log('写入成功');
-         }
-     });
+        }
+    });
 });

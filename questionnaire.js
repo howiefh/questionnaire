@@ -141,6 +141,7 @@
         },
 
         resetFields: function () {
+            var self = this;
             this.selectedOption = null;
             if (this.multipleRoutes) { // 又多个不同选项时才需要重置，其他情况 nextQuestion 是固定的.
                 this.nextQuestion = null;
@@ -151,7 +152,8 @@
                     case 'password':
                     case 'textarea':
                     case 'hidden':
-                        this.value = '';
+                        // 目前只有单行文本和多行文本有默认值
+                        this.value = self.default || '';
                         break;
 
                     case 'radio':
@@ -249,12 +251,12 @@
                 this.element.find('input[data-oid=' + this.selectedOption.id + ']').prop('checked', true);
             }
 
-            if (this.type.endsWith('text')) {
+            if (this.type.endsWith('text') && answer.text) {
                 this.text = answer.text;
                 this.element.find('input[type=text]').val(answer.text);
             }
 
-            if (this.type.endsWith('textarea')) {
+            if (this.type.endsWith('textarea') && answer.text) {
                 this.text = answer.text;
                 this.element.find('textarea').val(answer.text);
             }

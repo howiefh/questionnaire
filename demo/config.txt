@@ -1,0 +1,22 @@
+1 Are you <% this.username?this.username:'' %>?[required:true][单选单行文本]
+* yes[data:y]
+* no[data:n][goto:3]
+
+2 Are you ok?[required:true][单选单行文本]
+* yes[data:y]
+* no[data:n][goto:4]
+
+3 Do you like me?[required:true][单选单行文本]
+* yes[data:y]
+* no[data:n][goto:5]
+
+3 Do you like MI?[required:true][单选]
+* yes[data:y]
+* no[data:n][goto:5]
+
+4 How do you like me?[default:don't know][required:true][单行文本]
+
+5 How are you?[default:Fine!][fixed:true][多行文本]
+
+6 Thank you![end:true][提示]
+
